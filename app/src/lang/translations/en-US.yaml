@@ -1782,6 +1782,9 @@ interfaces:
       toggle: Toggle Block
       alignment: Alignment
       raw: Raw HTML
+  input-block-editor-bs:
+    input-block-editor: Block Editor (BS)
+    description: Block-styled editor for rich media stories, outputs clean data in JSON using Editor.js
   input-autocomplete-api:
     input-autocomplete-api: Autocomplete Input (API)
     description: A search typeahead for external API values.
