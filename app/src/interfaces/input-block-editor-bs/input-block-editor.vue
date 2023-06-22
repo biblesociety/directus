@@ -28,7 +28,7 @@
 
 		<v-drawer
 			v-if="!disabled"
-			:model-value="fileHandler !== null"
+			:model-value="relatedContentHandler.showDraw"
 			icon="settings_ethernet"
 			:title="t('Select related content')"
 			:cancelable="true"
@@ -65,6 +65,7 @@ import { useFileHandler } from './use-file-handler';
 import getTools from './tools';
 import { useCollectionsStore } from '@/stores/collections';
 import { unexpectedError } from '@/utils/unexpected-error';
+import { useRelatedContentHandler } from './related-content-handler';
 
 const props = withDefaults(
 	defineProps<{
@@ -107,6 +108,20 @@ const haveValuesChanged = ref<boolean>(false);
 const selectDrawerOpen = ref(false);
 const displayRelatedItem = props.value != null;
 
+const relatedContentHandler = useRelatedContentHandler(
+	function () {
+		return new Promise((resolve, reject) => {
+			api.get('/collections?limit=-1').then((res: any) => {
+
+				resolve(res.data.data);
+			});
+		});
+	},
+	function (insance) {
+
+	}
+);
+
 const tools = getTools(
 	{
 		addTokenToURL,
@@ -116,7 +131,8 @@ const tools = getTools(
 		getUploadFieldElement: () => uploaderComponentElement,
 	},
 	props.tools,
-	haveFilesAccess
+	haveFilesAccess,
+	relatedContentHandler
 );
 
 onMounted(async () => {

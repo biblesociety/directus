@@ -1,7 +1,6 @@
 import BaseAttachesTool from '@editorjs/attaches';
 import BaseImageTool from '@editorjs/image';
 import { unexpectedError } from '@/utils/unexpected-error';
-import { useApi } from '@directus/extensions-sdk';
 
 /**
  * This file is a modified version of the attaches and image tool from editorjs to work with the Directus file manager.
@@ -164,10 +163,15 @@ export class RelatedTool {
 	relatedContent: boolean;
 	contentTypeSelect: any;
 	api: any;
-	constructor() {
+	handler: object;
+	data: object;
+
+	constructor({ data, config }) {
 		this.relatedContent = false;
 		this.contentTypeSelect = null;
-		//this.api = useApi();
+
+		this.handler = config.handler;
+		this.data = data;
 	}
 
 	static get toolbox() {
@@ -179,20 +183,18 @@ export class RelatedTool {
 
 	render() {
 		this.contentTypeSelect = document.createElement('select');
+		let that = this;
 
-		//const api = useApi();
-		//console.log(api);
+		this.handler.getContentTypes().then(function(types: Array) {
+			for (let type of types) {
+				const option = document.createElement('option');
+				option.value = type.collection;
+				option.innerText = type.collection;
 
-		//api.get('/collections?limit=-1').then((res: any) => {
-		//	const collections = res.data.data;
-		//	console.log(collections);
-		//});
-
-		const option = document.createElement('option');
-		option.value = '12345';
-		option.innerText = 'Option 1';
-
-		this.contentTypeSelect.appendChild(option);
+				that.contentTypeSelect.appendChild(option);
+				
+			}
+		});
 
 		return this.contentTypeSelect;
 	}
