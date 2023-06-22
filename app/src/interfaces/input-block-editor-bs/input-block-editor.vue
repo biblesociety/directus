@@ -116,29 +116,32 @@ const relatedContentHandler = useRelatedContentHandler(
 	}
 );
 
-const onSelectedCollectionChange = function () {
-	console.log();
-};
+type SelectOption = {
+	name: string,
+	value: string,
+}
 
-let selectedContentOptions = ref([]);
+let selectedCollectionOptions = ref<Array<SelectOption>>([]);
 const getSelectedCollectionOptions = async function (event: any) {
 	console.log(event.target.value);
 
 	if (typeof event.target.value === 'string') {
 
-		selectedContentOptions = ref(await api.get('/items/'+event.target.value).then((res: any) => {
+		selectedCollectionOptions.value = await api.get('/items/'+event.target.value).then((res: any) => {
 
-			const contentItems = [];
-			console.log(res);
-			for (let contentItem of res.data)
-			{
-				contentItems.push({
-					name: contentItem.title,
-					value: contentItem.id,
-				});
-			}
-			return contentItems;
-		}));
+				const contentItems = [];
+				console.log(res.data.data);
+				for (let contentItem of res.data.data)
+				{
+					contentItems.push({
+						name: contentItem.id,
+						value: contentItem.id,
+					});
+				}
+				return contentItems;
+		});
+
+		console.log(selectedCollectionOptions.value);
 	}
 };
 
