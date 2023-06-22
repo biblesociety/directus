@@ -160,14 +160,12 @@ export class ImageTool extends BaseImageTool {
 }
 
 export class RelatedTool {
-	relatedContent: boolean;
 	contentTypeSelect: any;
 	api: any;
 	handler: object;
 	data: object;
 
 	constructor({ data, config }) {
-		this.relatedContent = false;
 		this.contentTypeSelect = null;
 
 		this.handler = config.handler;
@@ -185,8 +183,9 @@ export class RelatedTool {
 
 		const element = document.createElement('p');
 
-		if (!this.relatedContent) {
-			this.handler.showDraw = true;
+		if (typeof this.data !== 'object' || Object.entries(this.data).length == 0) {
+			this.handler.showDrawer.value = true;
+			element.innerText = 'select some content';
 		} else {
 			element.innerText = 'content set!';
 		}

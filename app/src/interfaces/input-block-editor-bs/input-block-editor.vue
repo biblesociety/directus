@@ -28,11 +28,11 @@
 
 		<v-drawer
 			v-if="!disabled"
-			:model-value="relatedContentHandler.showDraw !== false"
+			:model-value="showRelatedContentDrawer"
 			icon="settings_ethernet"
 			:title="t('Select related content')"
 			:cancelable="true"
-			@cancel="relatedContentHandlerCancelDraw"
+			@cancel="cancelRelatedContentDrawer"
 		>
 			<div class="related-drawer-content">
 				<p>
@@ -101,24 +101,21 @@ const editorElement = ref<HTMLElement>();
 const haveFilesAccess = Boolean(collectionStore.getCollection('directus_files'));
 const haveValuesChanged = ref<boolean>(false);
 
-const selectDrawerOpen = ref(false);
-const displayRelatedItem = props.value != null;
-
-const relatedContentHandler = useRelatedContentHandler(
-	function (instance) {
-		// Todo - implement
-	},
-	async function () {
-		console.log(relatedContentHandler.selectedCollection);
-		return await api.get('/items/'+relatedContentHandler.selectedCollection.value).then((res: any) => {
-			return res.data.data;
-		});
-	}
-);
+const relatedContentHandler = useRelatedContentHandler();
 
 type SelectOption = {
 	name: string,
 	value: string,
+}
+
+let showRelatedContentDrawer = computed(function() {
+	console.log(relatedContentHandler.showDrawer.value);
+	return relatedContentHandler.showDrawer.value == true;
+});
+const cancelRelatedContentDrawer = function(event) {
+	relatedContentHandler.showDrawer.value = false;
+	relatedContentHandler.selectedCollection = null;
+	relatedContentHandler.selectedContent = null;
 }
 
 let selectedCollectionOptions = ref<Array<SelectOption>>([]);
@@ -144,9 +141,6 @@ const getSelectedCollectionOptions = async function (event: any) {
 		console.log(selectedCollectionOptions.value);
 	}
 };
-
-const relatedContentHandlerShow = relatedContentHandler.checkShowDraw;
-const relatedContentHandlerCancelDraw = relatedContentHandler.cancelDraw;
 
 const tools = getTools(
 	{
