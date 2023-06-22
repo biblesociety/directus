@@ -28,7 +28,7 @@
 
 		<v-drawer
 			v-if="!disabled"
-			:model-value="relatedContentHandler.showDraw !== ref(false)"
+			:model-value="relatedContentHandler.showDraw !== false"
 			icon="settings_ethernet"
 			:title="t('Select related content')"
 			:cancelable="true"
@@ -36,13 +36,13 @@
 		>
 			<div class="related-drawer-content">
 				<p>
-					<select :value="relatedContentHandler.selectedCollection">
+					<select v-model="relatedContentHandler.selectedCollection" @change="getSelectedCollectionOptions">
 						<option v-for="collection in collectionStore.collections" :value="collection.collection" :key="collection.collection">{{ collection.collection }}</option>
 					</select>
 				</p>
 				<p v-if="relatedContentHandler.selectedCollection != null">
-					<select :value="relatedContentHandler.selectedContent" :selected-collection="relatedContentHandler.selectedCollection">
-						<option v-for="collection in relatedContentHandler.getSelectedCollectionOptions" :value="collection.value">{{ collection.name }}</option>
+					<select v-model="relatedContentHandler.selectedContent">
+						<option v-for="collection in selectedCollectionOptions" :value="collection.value">{{ collection.name }}</option>
 					</select>
 				</p>
 			</div>
@@ -51,7 +51,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, watch } from 'vue';
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import api, { addTokenToURL } from '@/api';
 import EditorJS from '@editorjs/editorjs';
@@ -104,18 +104,43 @@ const haveValuesChanged = ref<boolean>(false);
 const selectDrawerOpen = ref(false);
 const displayRelatedItem = props.value != null;
 
-//const collections = await api.get('/collections?limit=-1').then((res: any) => {
-//	return res.data.data;
-//});
-
 const relatedContentHandler = useRelatedContentHandler(
 	function (instance) {
 		// Todo - implement
 	},
-	function (selectedCollection) {
-		// Todo - implement
+	async function () {
+		console.log(relatedContentHandler.selectedCollection);
+		return await api.get('/items/'+relatedContentHandler.selectedCollection.value).then((res: any) => {
+			return res.data.data;
+		});
 	}
 );
+
+const onSelectedCollectionChange = function () {
+	console.log();
+};
+
+let selectedContentOptions = ref([]);
+const getSelectedCollectionOptions = async function (event: any) {
+	console.log(event.target.value);
+
+	if (typeof event.target.value === 'string') {
+
+		selectedContentOptions = ref(await api.get('/items/'+event.target.value).then((res: any) => {
+
+			const contentItems = [];
+			console.log(res);
+			for (let contentItem of res.data)
+			{
+				contentItems.push({
+					name: contentItem.title,
+					value: contentItem.id,
+				});
+			}
+			return contentItems;
+		}));
+	}
+};
 
 const relatedContentHandlerShow = relatedContentHandler.checkShowDraw;
 const relatedContentHandlerCancelDraw = relatedContentHandler.cancelDraw;
@@ -219,14 +244,6 @@ function sanitizeValue(value: any): EditorJS.OutputData | null {
 		version: value?.version || '0.0.0',
 		blocks: value.blocks,
 	});
-}
-
-function onSelection(selectedIds: (number | string)[] | null) {
-	selectDrawerOpen.value = false;
-
-	if (props.value) {
-		props.value.value = { key: Array.isArray(selectedIds) ? selectedIds[0] : null, collection: unref(selectedCollection) };
-	}
 }
 </script>
 
