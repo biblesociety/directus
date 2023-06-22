@@ -28,28 +28,23 @@
 
 		<v-drawer
 			v-if="!disabled"
-			:model-value="relatedContentHandler.showDraw"
+			:model-value="relatedContentHandler.showDraw !== ref(false)"
 			icon="settings_ethernet"
 			:title="t('Select related content')"
 			:cancelable="true"
+			@cancel="relatedContentHandlerCancelDraw"
 		>
 			<div class="related-drawer-content">
-				<v-input clickable :placeholder="t('select_an_item')" :disabled="disabled" @click="selectDrawerOpen = true">
-					<template v-if="displayRelatedItem" #input>
-						<div class="preview">
-							<!--<render-template :collection="selectedCollection" :item="displayItem" :template="displayTemplate" />-->
-						</div>
-					</template>
-
-					<template #append>
-						<template v-if="displayRelatedItem">
-							<v-icon v-tooltip="t('deselect')" name="close" class="deselect" @click.stop="$emit('input', undefined)" />
-						</template>
-						<template v-else>
-							<v-icon class="expand" name="expand_more" />
-						</template>
-					</template>
-				</v-input>
+				<p>
+					<select :value="relatedContentHandler.selectedCollection">
+						<option v-for="collection in collectionStore.collections" :value="collection.collection" :key="collection.collection">{{ collection.collection }}</option>
+					</select>
+				</p>
+				<p v-if="relatedContentHandler.selectedCollection != null">
+					<select :value="relatedContentHandler.selectedContent" :selected-collection="relatedContentHandler.selectedCollection">
+						<option v-for="collection in relatedContentHandler.getSelectedCollectionOptions" :value="collection.value">{{ collection.name }}</option>
+					</select>
+				</p>
 			</div>
 		</v-drawer>
 	</div>
@@ -66,6 +61,7 @@ import getTools from './tools';
 import { useCollectionsStore } from '@/stores/collections';
 import { unexpectedError } from '@/utils/unexpected-error';
 import { useRelatedContentHandler } from './related-content-handler';
+import Collections from '@/modules/settings/routes/data-model/collections/collections.vue';
 
 const props = withDefaults(
 	defineProps<{
@@ -108,19 +104,21 @@ const haveValuesChanged = ref<boolean>(false);
 const selectDrawerOpen = ref(false);
 const displayRelatedItem = props.value != null;
 
+//const collections = await api.get('/collections?limit=-1').then((res: any) => {
+//	return res.data.data;
+//});
+
 const relatedContentHandler = useRelatedContentHandler(
-	function () {
-		return new Promise((resolve, reject) => {
-			api.get('/collections?limit=-1').then((res: any) => {
-
-				resolve(res.data.data);
-			});
-		});
+	function (instance) {
+		// Todo - implement
 	},
-	function (insance) {
-
+	function (selectedCollection) {
+		// Todo - implement
 	}
 );
+
+const relatedContentHandlerShow = relatedContentHandler.checkShowDraw;
+const relatedContentHandlerCancelDraw = relatedContentHandler.cancelDraw;
 
 const tools = getTools(
 	{

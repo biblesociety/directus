@@ -182,7 +182,17 @@ export class RelatedTool {
 	}
 
 	render() {
-		this.contentTypeSelect = document.createElement('select');
+
+		const element = document.createElement('p');
+
+		if (!this.relatedContent) {
+			this.handler.showDraw = true;
+		} else {
+			element.innerText = 'content set!';
+		}
+
+		return element;
+		/*this.contentTypeSelect = document.createElement('select');
 		let that = this;
 
 		this.handler.getContentTypes().then(function(types: Array) {
@@ -196,7 +206,7 @@ export class RelatedTool {
 			}
 		});
 
-		return this.contentTypeSelect;
+		return this.contentTypeSelect;*/
 	}
 
 	save(blockContent: { value: any }) {
