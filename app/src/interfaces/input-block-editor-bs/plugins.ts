@@ -1,7 +1,8 @@
 import BaseAttachesTool from '@editorjs/attaches';
 import BaseImageTool from '@editorjs/image';
 import { unexpectedError } from '@/utils/unexpected-error';
-
+import { RelatedContentHandler } from './related-content-handler';
+import type { Ref } from 'vue';
 /**
  * This file is a modified version of the attaches and image tool from editorjs to work with the Directus file manager.
  *
@@ -159,17 +160,25 @@ export class ImageTool extends BaseImageTool {
 	}
 }
 
-export class RelatedTool {
-	contentTypeSelect: any;
-	api: any;
-	handler: object;
+type RelatedToolData = {
 	data: object;
+	config: RelatedToolDataConfig;
+};
+type RelatedToolDataConfig = {
+	handler: RelatedContentHandler;
+};
 
-	constructor({ data, config }) {
-		this.contentTypeSelect = null;
+export class RelatedTool {
+	blockContent: any;
+	handler: RelatedContentHandler;
+	data: object;
+	element: HTMLElement;
+
+	constructor({ data, config }: RelatedToolData) {
 
 		this.handler = config.handler;
 		this.data = data;
+		this.element = document.createElement('div');
 	}
 
 	static get toolbox() {
@@ -181,36 +190,77 @@ export class RelatedTool {
 
 	render() {
 
-		const element = document.createElement('p');
-
 		if (typeof this.data !== 'object' || Object.entries(this.data).length == 0) {
-			this.handler.showDrawer.value = true;
-			element.innerText = 'select some content';
+			const button = document.createElement('button');
+			button.innerText = 'Select related content';
+			button.classList.add('button');
+			button.classList.add('align-center');
+			button.classList.add('full-width');
+			button.classList.add('normal');
+			this.element.appendChild(button);
+
+			//let that = this;
+			button.onclick = (e) => this.contentSelectionStart();
 		} else {
-			element.innerText = 'content set!';
+			this.renderRelatedContent();
 		}
 
-		return element;
-		/*this.contentTypeSelect = document.createElement('select');
+		return this.element;
+	}
+
+	renderRelatedContent()
+	{
+		// using data, render some related content
+		
+		const relatedElementDiv = document.createElement("div");
+		relatedElementDiv.innerHTML = `<p>Collection: ${this.data.collection}, Item: ${this.data.content}</p>`;
+
+		this.element.innerHTML = '';
+		this.element.appendChild(relatedElementDiv);
+	}
+
+	contentSelectionStart() {
+		
+		// Register the event listener
 		let that = this;
-
-		this.handler.getContentTypes().then(function(types: Array) {
-			for (let type of types) {
-				const option = document.createElement('option');
-				option.value = type.collection;
-				option.innerText = type.collection;
-
-				that.contentTypeSelect.appendChild(option);
-				
+		document.addEventListener("related-content-selected-event", function (event: object) {
+			if (
+				typeof event.detail === 'object' && 
+				event.detail.hasOwnProperty("collection") &&
+				event.detail.hasOwnProperty("content")
+			)
+			{
+				that.contentSelected(event.detail.collection, event.detail.content);
 			}
+		}, {
+			once: true, // only fire once, then remove the listener
 		});
 
-		return this.contentTypeSelect;*/
+		// Open the draw, using the handler
+		this.handler.openDrawer();
+	}
+
+	contentSelected(collection: string, content: any) {
+		console.log('content selected', collection, content);
+		
+		if (typeof this.data !== 'object')
+		{
+			this.data = {};
+		}
+		this.data = {
+			collection: collection,
+			content: content,
+		};
+
+		this.renderRelatedContent();
 	}
 
 	save(blockContent: { value: any }) {
-		return {
-			id: blockContent.value,
+		console.log('save', blockContent);
+		let data = {
+			collection: this.data.collection,
+			content: this.data.content,
 		};
+		return data;
 	}
 }

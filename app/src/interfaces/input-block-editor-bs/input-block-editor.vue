@@ -1,7 +1,7 @@
 <template>
 	<div class="input-block-editor-bs">
 		<div ref="editorElement" :class="{ [font]: true, disabled, bordered }"></div>
-
+		
 		<v-drawer
 			v-if="haveFilesAccess && !disabled"
 			:model-value="fileHandler !== null"
@@ -36,12 +36,12 @@
 		>
 			<div class="related-drawer-content">
 				<p>
-					<select v-model="relatedContentHandler.selectedCollection" @change="getSelectedCollectionOptions">
+					<select v-model="selectedCollection" @change="getSelectedCollectionOptions">
 						<option v-for="collection in collectionStore.collections" :value="collection.collection" :key="collection.collection">{{ collection.collection }}</option>
 					</select>
 				</p>
-				<p v-if="relatedContentHandler.selectedCollection != null">
-					<select v-model="relatedContentHandler.selectedContent">
+				<p v-if="selectedCollection != null">
+					<select v-model="selectedContent" @change="relatedContentSelected">
 						<option v-for="collection in selectedCollectionOptions" :value="collection.value">{{ collection.name }}</option>
 					</select>
 				</p>
@@ -101,21 +101,46 @@ const editorElement = ref<HTMLElement>();
 const haveFilesAccess = Boolean(collectionStore.getCollection('directus_files'));
 const haveValuesChanged = ref<boolean>(false);
 
-const relatedContentHandler = useRelatedContentHandler();
+let showRelatedContentDrawer = ref(false);
+let selectedCollection = ref<object | null>(null);
+let selectedContent = ref<object | null>(null);
+
+const relatedContentHandler = {
+	openDrawer: function(collection: object | null, content: object| null) {
+		showRelatedContentDrawer.value = true;
+		selectedCollection.value = collection;
+		selectedContent.value = content;
+	},
+	saveRelatedContent: function(selectedCollection: string| null, selectedContent: any | null)
+	{
+		if (selectedCollection)
+		{
+			const event = new CustomEvent("related-content-selected-event", { 
+				detail: {
+					collection: selectedCollection,
+					content: selectedContent
+				}
+			});
+			document.dispatchEvent(event);
+		}
+		else
+		{
+			const event = new CustomEvent("related-content-selected-event", {});
+			document.dispatchEvent(event);
+		}
+	},
+};
 
 type SelectOption = {
 	name: string,
 	value: string,
 }
 
-let showRelatedContentDrawer = computed(function() {
-	console.log(relatedContentHandler.showDrawer.value);
-	return relatedContentHandler.showDrawer.value == true;
-});
 const cancelRelatedContentDrawer = function(event) {
-	relatedContentHandler.showDrawer.value = false;
-	relatedContentHandler.selectedCollection = null;
-	relatedContentHandler.selectedContent = null;
+	showRelatedContentDrawer.value = false;
+	selectedCollection.value = null;
+	selectedContent.value = null;
+	relatedContentHandler.saveRelatedContent(null, null);
 }
 
 let selectedCollectionOptions = ref<Array<SelectOption>>([]);
@@ -123,7 +148,6 @@ const getSelectedCollectionOptions = async function (event: any) {
 	console.log(event.target.value);
 
 	if (typeof event.target.value === 'string') {
-
 		selectedCollectionOptions.value = await api.get('/items/'+event.target.value).then((res: any) => {
 
 				const contentItems = [];
@@ -141,6 +165,12 @@ const getSelectedCollectionOptions = async function (event: any) {
 		console.log(selectedCollectionOptions.value);
 	}
 };
+const relatedContentSelected = function (event: any) {
+	if (typeof event.target.value === 'string') {
+		relatedContentHandler.saveRelatedContent(selectedCollection.value, event.target.value);
+		showRelatedContentDrawer.value = false;
+	}
+}
 
 const tools = getTools(
 	{
@@ -152,7 +182,7 @@ const tools = getTools(
 	},
 	props.tools,
 	haveFilesAccess,
-	relatedContentHandler
+	relatedContentHandler,
 );
 
 onMounted(async () => {
