@@ -34,17 +34,13 @@
 			:cancelable="true"
 			@cancel="cancelRelatedContentDrawer"
 		>
-			<div class="related-drawer-content">
-				<p>
-					<select v-model="selectedCollection" @change="getSelectedCollectionOptions">
-						<option v-for="collection in collectionStore.collections" :value="collection.collection" :key="collection.collection">{{ collection.collection }}</option>
-					</select>
-				</p>
-				<p v-if="selectedCollection != null">
-					<select v-model="selectedContent" @change="relatedContentSelected">
-						<option v-for="collection in selectedCollectionOptions" :value="collection.value">{{ collection.name }}</option>
-					</select>
-				</p>
+			<div class="uploader-drawer-content">
+				<div class="label type-label">Collection</div>
+				<system-collection :value="selectedCollection" include-system @input="relatedCollectionSelected"></system-collection>
+				<div v-if="selectedCollection != null">
+					<div class="label type-label">Related Content</div>
+					<collection-item-dropdown :value="selectedContent" selected-collection="Content" @input="relatedContentSelected"></collection-item-dropdown>
+				</div>
 			</div>
 		</v-drawer>
 	</div>
@@ -61,7 +57,8 @@ import getTools from './tools';
 import { useCollectionsStore } from '@/stores/collections';
 import { unexpectedError } from '@/utils/unexpected-error';
 import { useRelatedContentHandler } from './related-content-handler';
-import Collections from '@/modules/settings/routes/data-model/collections/collections.vue';
+import CollectionItemDropdown from '@/interfaces/collection-item-dropdown/collection-item-dropdown.vue';
+import SystemCollection from '@/interfaces/_system/system-collection/system-collection.vue';
 
 const props = withDefaults(
 	defineProps<{
@@ -102,16 +99,16 @@ const haveFilesAccess = Boolean(collectionStore.getCollection('directus_files'))
 const haveValuesChanged = ref<boolean>(false);
 
 let showRelatedContentDrawer = ref(false);
-let selectedCollection = ref<object | null>(null);
-let selectedContent = ref<object | null>(null);
+let selectedCollection = ref<string | null>(null);
+let selectedContent = ref<any | null>(null);
 
 const relatedContentHandler = {
-	openDrawer: function(collection: object | null, content: object| null) {
+	openDrawer: function(collection: string | null, content: any| null) {
 		showRelatedContentDrawer.value = true;
 		selectedCollection.value = collection;
 		selectedContent.value = content;
 	},
-	saveRelatedContent: function(selectedCollection: string| null, selectedContent: any | null)
+	saveRelatedContent: function(selectedCollection: string | null, selectedContent: any | null)
 	{
 		if (selectedCollection)
 		{
@@ -131,45 +128,20 @@ const relatedContentHandler = {
 	},
 };
 
-type SelectOption = {
-	name: string,
-	value: string,
-}
-
-const cancelRelatedContentDrawer = function(event) {
+const cancelRelatedContentDrawer = function() {
 	showRelatedContentDrawer.value = false;
 	selectedCollection.value = null;
 	selectedContent.value = null;
 	relatedContentHandler.saveRelatedContent(null, null);
 }
 
-let selectedCollectionOptions = ref<Array<SelectOption>>([]);
-const getSelectedCollectionOptions = async function (event: any) {
-	console.log(event.target.value);
-
-	if (typeof event.target.value === 'string') {
-		selectedCollectionOptions.value = await api.get('/items/'+event.target.value).then((res: any) => {
-
-				const contentItems = [];
-				console.log(res.data.data);
-				for (let contentItem of res.data.data)
-				{
-					contentItems.push({
-						name: contentItem.id,
-						value: contentItem.id,
-					});
-				}
-				return contentItems;
-		});
-
-		console.log(selectedCollectionOptions.value);
-	}
+const relatedCollectionSelected = async function (collection: string | null) {
+	selectedCollection.value = collection;
 };
-const relatedContentSelected = function (event: any) {
-	if (typeof event.target.value === 'string') {
-		relatedContentHandler.saveRelatedContent(selectedCollection.value, event.target.value);
-		showRelatedContentDrawer.value = false;
-	}
+const relatedContentSelected = function (content: { collection: string, key: number }) {
+	selectedContent.value = content.key;
+	relatedContentHandler.saveRelatedContent(content.collection, content.key);
+	showRelatedContentDrawer.value = false;
 }
 
 const tools = getTools(
