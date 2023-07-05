@@ -39,7 +39,7 @@
 				<system-collection :value="selectedCollection" include-system @input="relatedCollectionSelected"></system-collection>
 				<div v-if="selectedCollection != null">
 					<div class="label type-label">Related Content</div>
-					<collection-item-dropdown :value="selectedContent" selected-collection="Content" @input="relatedContentSelected"></collection-item-dropdown>
+					<collection-item-dropdown :value="selectedContent" :selected-collection="selectedCollection" @input="relatedContentSelected"></collection-item-dropdown>
 				</div>
 			</div>
 		</v-drawer>
@@ -47,7 +47,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted, watch } from 'vue';
+import { ref, onMounted, onUnmounted, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import api, { addTokenToURL } from '@/api';
 import EditorJS from '@editorjs/editorjs';
@@ -58,8 +58,6 @@ import { useCollectionsStore } from '@/stores/collections';
 import { unexpectedError } from '@/utils/unexpected-error';
 import CollectionItemDropdown from '@/interfaces/collection-item-dropdown/collection-item-dropdown.vue';
 import SystemCollection from '@/interfaces/_system/system-collection/system-collection.vue';
-import SystemDisplayTemplate from '@/interfaces/_system/system-display-template/system-display-template.vue';
-import { renderToString } from '@vue/test-utils';
 
 const props = withDefaults(
 	defineProps<{

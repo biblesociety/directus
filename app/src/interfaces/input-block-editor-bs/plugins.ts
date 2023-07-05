@@ -1,6 +1,10 @@
 import BaseAttachesTool from '@editorjs/attaches';
 import BaseImageTool from '@editorjs/image';
 import { unexpectedError } from '@/utils/unexpected-error';
+import SystemDisplayTemplate from '@/interfaces/_system/system-display-template/system-display-template.vue';
+import { renderToString } from '@vue/test-utils';
+import { useI18n } from 'vue-i18n'
+
 /**
  * This file is a modified version of the attaches and image tool from editorjs to work with the Directus file manager.
  *
@@ -196,7 +200,7 @@ export class RelatedTool {
 			button.classList.add('full-width');
 			button.classList.add('normal');
 			this.element.appendChild(button);
-			
+
 			button.onclick = (e) => this.contentSelectionStart();
 		} else {
 			this.renderRelatedContent();
@@ -217,17 +221,18 @@ export class RelatedTool {
 		);
 		relatedElementDivInner.innerHTML = `Collection: ${this.data.collection}, Item: ${this.data.content}`;
 
-		/*
-		let displayString = `Collection: ${selectedCollection}, Item: ${selectedContent.key}`;
-		displayString = await renderToString(SystemDisplayTemplate, {
+		// Todo - work out how to render a component
+		/*renderToString(SystemDisplayTemplate, {
 			global: {
-				plugins: [usei18n]
+				plugins: [useI18n]
 			},
 			propsData: {
-				value: selectedContent,
+				value: this.data.content,
 			}
-		});
-		*/
+		}).then((string: string) => {
+			relatedElementDivInner.innerHTML = string;
+		});*/
+		
 		const relatedElementDiv = document.createElement("div");
 		relatedElementDiv.setAttribute('style', `
 		position: relative;
