@@ -1,8 +1,6 @@
 import BaseAttachesTool from '@editorjs/attaches';
 import BaseImageTool from '@editorjs/image';
 import { unexpectedError } from '@/utils/unexpected-error';
-import { RelatedContentHandler } from './related-content-handler';
-import type { Ref } from 'vue';
 /**
  * This file is a modified version of the attaches and image tool from editorjs to work with the Directus file manager.
  *
@@ -165,18 +163,18 @@ type RelatedToolData = {
 	config: RelatedToolDataConfig;
 };
 type RelatedToolDataConfig = {
-	handler: RelatedContentHandler;
+	openDrawer: (collection: string | null, content: any | null) => void;
 };
 
 export class RelatedTool {
 	blockContent: any;
-	handler: RelatedContentHandler;
+	openDrawer: (collection: string | null, content: any | null) => void;
 	data: object;
 	element: HTMLElement;
 
 	constructor({ data, config }: RelatedToolData) {
 
-		this.handler = config.handler;
+		this.openDrawer = config.openDrawer;
 		this.data = data;
 		this.element = document.createElement('div');
 	}
@@ -193,13 +191,12 @@ export class RelatedTool {
 		if (typeof this.data !== 'object' || Object.entries(this.data).length == 0) {
 			const button = document.createElement('button');
 			button.innerText = 'Select related content';
-			button.classList.add('button');
+			button.classList.add('cdx-button');
 			button.classList.add('align-center');
 			button.classList.add('full-width');
 			button.classList.add('normal');
 			this.element.appendChild(button);
-
-			//let that = this;
+			
 			button.onclick = (e) => this.contentSelectionStart();
 		} else {
 			this.renderRelatedContent();
@@ -211,9 +208,44 @@ export class RelatedTool {
 	renderRelatedContent()
 	{
 		// using data, render some related content
-		
+
+		const relatedElementDivInner = document.createElement('div');
+		relatedElementDivInner.setAttribute('style', `
+		padding: var(--input-padding);
+		padding-right: 0px;
+		padding-left: 0px;`
+		);
+		relatedElementDivInner.innerHTML = `Collection: ${this.data.collection}, Item: ${this.data.content}`;
+
+		/*
+		let displayString = `Collection: ${selectedCollection}, Item: ${selectedContent.key}`;
+		displayString = await renderToString(SystemDisplayTemplate, {
+			global: {
+				plugins: [usei18n]
+			},
+			propsData: {
+				value: selectedContent,
+			}
+		});
+		*/
 		const relatedElementDiv = document.createElement("div");
-		relatedElementDiv.innerHTML = `<p>Collection: ${this.data.collection}, Item: ${this.data.content}</p>`;
+		relatedElementDiv.setAttribute('style', `
+		position: relative;
+    	display: flex;
+    	flex-grow: 1;
+    	align-items: center;
+    	height: 100%;
+    	padding: var(--input-padding);
+    	padding-top: 0px;
+    	padding-bottom: 0px;
+    	color: var(--v-input-color);
+    	font-family: var(--v-input-font-family);
+    	background-color: var(--v-input-background-color);
+    	border: var(--border-width) solid var(--border-normal);
+    	border-radius: var(--border-radius);
+    	transition: border-color var(--fast) var(--transition);
+		`);
+		relatedElementDiv.appendChild(relatedElementDivInner);
 
 		this.element.innerHTML = '';
 		this.element.appendChild(relatedElementDiv);
@@ -223,12 +255,8 @@ export class RelatedTool {
 		
 		// Register the event listener
 		let that = this;
-		document.addEventListener("related-content-selected-event", function (event: object) {
-			if (
-				typeof event.detail === 'object' && 
-				event.detail.hasOwnProperty("collection") &&
-				event.detail.hasOwnProperty("content")
-			)
+		document.addEventListener("related-content-selected-event", function (event: any) {
+			if (event.detail && event.detail.hasOwnProperty("collection") && event.detail.hasOwnProperty("content"))
 			{
 				that.contentSelected(event.detail.collection, event.detail.content);
 			}
@@ -237,7 +265,7 @@ export class RelatedTool {
 		});
 
 		// Open the draw, using the handler
-		this.handler.openDrawer();
+		this.openDrawer(null, null);
 	}
 
 	contentSelected(collection: string, content: any) {

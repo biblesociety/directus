@@ -56,9 +56,10 @@ import { useFileHandler } from './use-file-handler';
 import getTools from './tools';
 import { useCollectionsStore } from '@/stores/collections';
 import { unexpectedError } from '@/utils/unexpected-error';
-import { useRelatedContentHandler } from './related-content-handler';
 import CollectionItemDropdown from '@/interfaces/collection-item-dropdown/collection-item-dropdown.vue';
 import SystemCollection from '@/interfaces/_system/system-collection/system-collection.vue';
+import SystemDisplayTemplate from '@/interfaces/_system/system-display-template/system-display-template.vue';
+import { renderToString } from '@vue/test-utils';
 
 const props = withDefaults(
 	defineProps<{
@@ -102,45 +103,43 @@ let showRelatedContentDrawer = ref(false);
 let selectedCollection = ref<string | null>(null);
 let selectedContent = ref<any | null>(null);
 
-const relatedContentHandler = {
-	openDrawer: function(collection: string | null, content: any| null) {
-		showRelatedContentDrawer.value = true;
-		selectedCollection.value = collection;
-		selectedContent.value = content;
-	},
-	saveRelatedContent: function(selectedCollection: string | null, selectedContent: any | null)
+const openRelatedContentDrawer = function(collection: string | null, content: any| null)
+{
+	showRelatedContentDrawer.value = true;
+	selectedCollection.value = collection;
+	selectedContent.value = content;
+}
+const saveRelatedContent = async function(selectedCollection: string | null, selectedContent: any | null)
+{
+	if (selectedCollection && selectedContent)
 	{
-		if (selectedCollection)
-		{
-			const event = new CustomEvent("related-content-selected-event", { 
-				detail: {
-					collection: selectedCollection,
-					content: selectedContent
-				}
-			});
-			document.dispatchEvent(event);
-		}
-		else
-		{
-			const event = new CustomEvent("related-content-selected-event", {});
-			document.dispatchEvent(event);
-		}
-	},
+		const event = new CustomEvent("related-content-selected-event", { 
+			detail: {
+				collection: selectedCollection,
+				content: selectedContent.key
+			}
+		});
+		document.dispatchEvent(event);
+	}
+	else
+	{
+		const event = new CustomEvent("related-content-selected-event", {});
+		document.dispatchEvent(event);
+	}
 };
 
 const cancelRelatedContentDrawer = function() {
 	showRelatedContentDrawer.value = false;
 	selectedCollection.value = null;
 	selectedContent.value = null;
-	relatedContentHandler.saveRelatedContent(null, null);
+	saveRelatedContent(null, null);
 }
-
 const relatedCollectionSelected = async function (collection: string | null) {
 	selectedCollection.value = collection;
 };
 const relatedContentSelected = function (content: { collection: string, key: number }) {
 	selectedContent.value = content.key;
-	relatedContentHandler.saveRelatedContent(content.collection, content.key);
+	saveRelatedContent(content.collection, content);
 	showRelatedContentDrawer.value = false;
 }
 
@@ -154,7 +153,7 @@ const tools = getTools(
 	},
 	props.tools,
 	haveFilesAccess,
-	relatedContentHandler,
+	openRelatedContentDrawer,
 );
 
 onMounted(async () => {

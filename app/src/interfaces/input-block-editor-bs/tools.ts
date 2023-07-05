@@ -26,7 +26,7 @@ export default function getTools(
 	uploaderConfig: UploaderConfig,
 	selection: Array<string>,
 	haveFilesAccess: boolean,
-	relatedContentHandler: object
+	openRelatedContentDrawer: (collection: string | null, content: any | null) => void
 ): Record<string, object> {
 	const tools: Record<string, any> = {};
 	const fileRequiresTools = ['attaches', 'image'];
@@ -102,7 +102,7 @@ export default function getTools(
 			class: RelatedTool,
 			inlineToolbar: true,
 			config: {
-				handler: relatedContentHandler,
+				openDrawer: openRelatedContentDrawer,
 			},
 		},
 	};
