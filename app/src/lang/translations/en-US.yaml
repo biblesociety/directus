@@ -1785,6 +1785,28 @@ interfaces:
   input-block-editor-bs:
     input-block-editor: Block Editor (BS)
     description: Block-styled editor for rich media stories, outputs clean data in JSON using Editor.js
+  input-layout-editor:
+    input-layout-editor: Layout Editor
+    description: Layout-styled editor for rich media stories, outputs clean data in JSON
+    tools: Toolbar
+    tools_options:
+      header: Header
+      nestedlist: List
+      embed: Embed
+      paragraph: Paragraph
+      code: Code
+      image: Image
+      attaches: Attaches
+      table: Table
+      quote: Quote
+      underline: Underline
+      inlinecode: Inline Code
+      delimiter: Delimiter
+      checklist: Checklist
+      toggle: Toggle Block
+      alignment: Alignment
+      raw: Raw HTML
+      related: Related Content
   input-autocomplete-api:
     input-autocomplete-api: Autocomplete Input (API)
     description: A search typeahead for external API values.
